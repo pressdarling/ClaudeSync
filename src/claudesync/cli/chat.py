@@ -18,7 +18,7 @@ def chat():
 @chat.command()
 @click.pass_obj
 @handle_errors
-def pull(config):
+def sync(config):
     """Synchronize chats and their artifacts from the remote source."""
     provider = validate_and_get_provider(config, require_project=True)
     sync_chats(provider, config)
@@ -49,7 +49,7 @@ def ls(config):
 @click.pass_obj
 @handle_errors
 def rm(config, delete_all):
-    """Delete chat conversations. Use -a to delete all chats, or run without -a to select specific chats to delete."""
+    """Delete chats. Use -a to delete all chats, or select a chat to delete."""
     provider = validate_and_get_provider(config)
     organization_id = config.get("active_organization_id")
 
@@ -74,16 +74,16 @@ def delete_all_chats(provider, organization_id):
     """Delete all chats for the given organization."""
     if click.confirm("Are you sure you want to delete all chats?"):
         total_deleted = 0
-    with click.progressbar(length=100, label="Deleting chats") as bar:
-        while True:
-            chats = provider.get_chat_conversations(organization_id)
-            if not chats:
-                break
-            uuids_to_delete = [chat["uuid"] for chat in chats[:50]]
-            deleted, _ = delete_chats(provider, organization_id, uuids_to_delete)
-            total_deleted += deleted
-            bar.update(len(uuids_to_delete))
-    click.echo(f"Chat deletion complete. Total chats deleted: {total_deleted}")
+        with click.progressbar(length=100, label="Deleting chats") as bar:
+            while True:
+                chats = provider.get_chat_conversations(organization_id)
+                if not chats:
+                    break
+                uuids_to_delete = [chat["uuid"] for chat in chats[:50]]
+                deleted, _ = delete_chats(provider, organization_id, uuids_to_delete)
+                total_deleted += deleted
+                bar.update(len(uuids_to_delete))
+        click.echo(f"Chat deletion complete. Total chats deleted: {total_deleted}")
 
 
 def delete_single_chat(provider, organization_id):
@@ -145,8 +145,8 @@ def confirm_and_delete_chat(provider, organization_id, chat):
 @click.option("--project", help="UUID of the project to associate the chat with")
 @click.pass_obj
 @handle_errors
-def init(config, name, project):
-    """Initializes a new chat conversation on the active provider."""
+def create(config, name, project):
+    """Create a new chat conversation on the active provider."""
     provider = validate_and_get_provider(config)
     organization_id = config.get("active_organization_id")
     active_project_id = config.get("active_project_id")
@@ -186,31 +186,34 @@ def init(config, name, project):
 @click.option("--timezone", default="UTC", help="Timezone for the message")
 @click.pass_obj
 @handle_errors
-def message(config, message, chat, timezone):
+def send(config, message, chat, timezone):
     """Send a message to a specified chat or create a new chat and send the message."""
-    provider = validate_and_get_provider(config, require_project=True)
-    active_organization_id = config.get("active_organization_id")
+    provider = validate_and_get_provider(config)
+    organization_id = config.get("active_organization_id")
     active_project_id = config.get("active_project_id")
     active_project_name = config.get("active_project_name")
+    local_path = config.get("local_path")
+
+    if not organization_id:
+        click.echo("No active organization set.")
+        return
 
     message = " ".join(message)  # Join all message parts into a single string
 
     try:
         chat = create_chat(
-            config,
             active_project_id,
             active_project_name,
             chat,
-            active_organization_id,
+            local_path,
+            organization_id,
             provider,
         )
         if chat is None:
             return
 
         # Send message and process the streaming response
-        for event in provider.send_message(
-            active_organization_id, chat, message, timezone
-        ):
+        for event in provider.send_message(organization_id, chat, message, timezone):
             if "completion" in event:
                 click.echo(event["completion"], nl=False)
             elif "content" in event:
@@ -229,38 +232,30 @@ def message(config, message, chat, timezone):
 
 
 def create_chat(
-    config,
-    active_project_id,
-    active_project_name,
-    chat,
-    active_organization_id,
-    provider,
+    active_project_id, active_project_name, chat, local_path, organization_id, provider
 ):
     if not chat:
-        if not active_project_name:
-            active_project_id = select_project(
-                config,
-                active_project_id,
-                active_project_name,
-                active_organization_id,
-                provider,
-            )
-        if active_project_id is None:
-            return None
+        selected_project = select_project(
+            active_project_id,
+            active_project_name,
+            local_path,
+            organization_id,
+            provider,
+        )
+        if selected_project is None:
+            return
 
         # Create a new chat with the selected project
-        new_chat = provider.create_chat(
-            active_organization_id, project_uuid=active_project_id
-        )
+        new_chat = provider.create_chat(organization_id, project_uuid=selected_project)
         chat = new_chat["uuid"]
         click.echo(f"New chat created with ID: {chat}")
     return chat
 
 
 def select_project(
-    config, active_project_id, active_project_name, active_organization_id, provider
+    active_project_id, active_project_name, local_path, organization_id, provider
 ):
-    all_projects = provider.get_projects(active_organization_id)
+    all_projects = provider.get_projects(organization_id)
     if not all_projects:
         click.echo("No projects found in the active organization.")
         return None
@@ -284,7 +279,11 @@ def select_project(
     current_dir = os.path.abspath(os.getcwd())
 
     default_project = get_default_project(
-        config, active_project_id, active_project_name, current_dir, filtered_projects
+        active_project_id,
+        active_project_name,
+        current_dir,
+        filtered_projects,
+        local_path,
     )
 
     click.echo("Available projects:")
@@ -315,12 +314,8 @@ def select_project(
 
 
 def get_default_project(
-    config, active_project_id, active_project_name, current_dir, filtered_projects
+    active_project_id, active_project_name, current_dir, filtered_projects, local_path
 ):
-    local_path = config.get("local_path")
-    if not local_path:
-        return None
-
     # Find the project that matches the current directory
     default_project = None
     for idx, proj in enumerate(filtered_projects):
