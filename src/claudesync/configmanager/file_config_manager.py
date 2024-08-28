@@ -2,10 +2,8 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-import logging
 
 from claudesync.configmanager.base_config_manager import BaseConfigManager
-from claudesync.session_key_manager import SessionKeyManager
 
 
 class FileConfigManager(BaseConfigManager):
@@ -59,24 +57,23 @@ class FileConfigManager(BaseConfigManager):
         Finds the nearest directory containing a .claudesync folder.
 
         Searches from the current working directory upwards until it finds a .claudesync folder
-        or reaches the root directory. Excludes the ~/.claudesync directory.
+        or reaches the root directory.
 
         Returns:
             Path: The path containing the .claudesync folder, or None if not found.
         """
         current_dir = Path.cwd()
         root_dir = Path(current_dir.root)
-        home_dir = Path.home()
-        depth = 0
+        depth = 0  # Initialize depth counter
 
         while current_dir != root_dir:
-            claudesync_dir = current_dir / ".claudesync"
-            if claudesync_dir.is_dir() and claudesync_dir != home_dir / ".claudesync":
+            if (current_dir / ".claudesync").is_dir():
                 return current_dir
 
             current_dir = current_dir.parent
-            depth += 1
+            depth += 1  # Increment depth counter
 
+            # Sanity check: stop if max_depth is reached
             if depth > max_depth:
                 return None
 
@@ -85,7 +82,8 @@ class FileConfigManager(BaseConfigManager):
     def _load_local_config(self):
         """
         Loads the local configuration from the nearest .claudesync/config.local.json file.
-        Automatically normalizes any Windows-style paths.
+
+        Sets the local_config_dir and populates the local_config dictionary.
         """
         self.local_config_dir = self._find_local_config_dir()
         if self.local_config_dir:
@@ -95,19 +93,6 @@ class FileConfigManager(BaseConfigManager):
             if local_config_file.exists():
                 with open(local_config_file, "r") as f:
                     self.local_config = json.load(f)
-
-                # Check and fix Windows-style paths in submodules
-                if "submodules" in self.local_config:
-                    needs_save = False
-                    for submodule in self.local_config["submodules"]:
-                        if "\\" in submodule["relative_path"]:
-                            submodule["relative_path"] = submodule[
-                                "relative_path"
-                            ].replace("\\", "/")
-                            needs_save = True
-
-                    if needs_save:
-                        self._save_local_config()
 
     def get_local_path(self):
         """
@@ -143,12 +128,9 @@ class FileConfigManager(BaseConfigManager):
             local (bool): If True, sets the value in the local configuration. Otherwise, sets it in the global configuration.
         """
         if local:
-            # Update local_config_dir when setting local_path
-            if key == "local_path":
-                self.local_config_dir = Path(value)
-                # Create .claudesync directory in the specified path
+            if not self.local_config_dir:
+                self.local_config_dir = Path.cwd()
                 (self.local_config_dir / ".claudesync").mkdir(exist_ok=True)
-
             self.local_config[key] = value
             self._save_local_config()
         else:
@@ -173,7 +155,6 @@ class FileConfigManager(BaseConfigManager):
             local_config_file = (
                 self.local_config_dir / ".claudesync" / "config.local.json"
             )
-            local_config_file.parent.mkdir(exist_ok=True)
             with open(local_config_file, "w") as f:
                 json.dump(self.local_config, f, indent=2)
 
@@ -186,64 +167,42 @@ class FileConfigManager(BaseConfigManager):
             session_key (str): The session key to set.
             expiry (datetime): The expiry datetime for the session key.
         """
-        try:
-            session_key_manager = SessionKeyManager()
-            encrypted_session_key, encryption_method = (
-                session_key_manager.encrypt_session_key(provider, session_key)
+        self.global_config_dir.mkdir(parents=True, exist_ok=True)
+        provider_key_file = self.global_config_dir / f"{provider}.key"
+        with open(provider_key_file, "w") as f:
+            json.dump(
+                {"session_key": session_key, "session_key_expiry": expiry.isoformat()},
+                f,
             )
 
-            self.global_config_dir.mkdir(parents=True, exist_ok=True)
-            provider_key_file = self.global_config_dir / f"{provider}.key"
-            with open(provider_key_file, "w") as f:
-                json.dump(
-                    {
-                        "session_key": encrypted_session_key,
-                        "session_key_encryption_method": encryption_method,
-                        "session_key_expiry": expiry.isoformat(),
-                    },
-                    f,
-                )
-        except RuntimeError as e:
-            logging.error(f"Failed to encrypt session key: {str(e)}")
-            raise
-
-    def get_session_key(self, provider):
+    def get_session_key(self, providerName):
         """
         Retrieves the session key for the specified provider if it's still valid.
 
         Args:
-            provider (str): The name of the provider.
+            providerName (str): The name of the provider.
 
         Returns:
             tuple: A tuple containing the session key and expiry if valid, (None, None) otherwise.
         """
-        provider_key_file = self.global_config_dir / f"{provider}.key"
+        provider_key_file = self.global_config_dir / f"{providerName}.key"
         if not provider_key_file.exists():
             return None, None
 
         with open(provider_key_file, "r") as f:
             data = json.load(f)
 
-        encrypted_key = data.get("session_key")
-        encryption_method = data.get("session_key_encryption_method")
+        session_key = data.get("session_key")
         expiry_str = data.get("session_key_expiry")
 
-        if not encrypted_key or not expiry_str:
+        if not session_key or not expiry_str:
             return None, None
 
         expiry = datetime.fromisoformat(expiry_str)
         if datetime.now() > expiry:
             return None, None
 
-        try:
-            session_key_manager = SessionKeyManager()
-            session_key = session_key_manager.decrypt_session_key(
-                provider, encryption_method, encrypted_key
-            )
-            return session_key, expiry
-        except RuntimeError as e:
-            logging.error(f"Failed to decrypt session key: {str(e)}")
-            return None, None
+        return session_key, expiry
 
     def add_file_category(self, category_name, description, patterns):
         """
