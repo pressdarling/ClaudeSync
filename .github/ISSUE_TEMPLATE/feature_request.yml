@@ -1,6 +1,11 @@
 name: Feature Request
 description: Suggest a new feature for ClaudeSync.
+<<<<<<< HEAD
 labels: ["enhancement"]
+=======
+title: "[Feature]: "
+labels: ["feature", "enhancement", "claudesync"]
+>>>>>>> 24ffb35 (feat: yml issue templates)
 projects: ["claudesync/features"]
 assignees:
   - claudesync-team
@@ -86,9 +91,15 @@ body:
       label: Willingness to Help
       description: Are you interested in contributing to this feature?
       options:
+<<<<<<< HEAD
         - "Yes"
         - "No"
       default: 1
+=======
+        - Yes
+        - No
+      default: No
+>>>>>>> 24ffb35 (feat: yml issue templates)
     validations:
       required: true
 
