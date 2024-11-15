@@ -1,202 +1,95 @@
-```
-  .oooooo.   oooo                              .o8                .oooooo..o                                   
- d8P'  `Y8b  `888                             "888               d8P'    `Y8                                   
-888           888   .oooo.   oooo  oooo   .oooo888   .ooooo.     Y88bo.      oooo    ooo ooo. .oo.    .ooooo.  
-888           888  `P  )88b  `888  `888  d88' `888  d88' `88b     `"Y8888o.   `88.  .8'  `888P"Y88b  d88' `"Y8 
-888           888   .oP"888   888   888  888   888  888ooo888         `"Y88b   `88..8'    888   888  888       
-`88b    ooo   888  d8(  888   888   888  888   888  888    .o    oo     .d8P    `888'     888   888  888   .o8 
- `Y8bood8P'  o888o `Y888""8o  `V88V"V8P' `Y8bod88P" `Y8bod8P'    8""88888P'      .8'     o888o o888o `Y8bod8P' 
-                                                                             .o..P'                            
-                                                                             `Y8P'                              
-```
-[![Python package](https://github.com/jahwag/ClaudeSync/actions/workflows/python-package.yml/badge.svg)](https://github.com/jahwag/ClaudeSync/actions/workflows/python-package.yml)
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
-[![PyPI version](https://badge.fury.io/py/claudesync.svg)](https://badge.fury.io/py/claudesync)
+# ClaudeSync
 
-ClaudeSync is a powerful tool designed to seamlessly synchronize your local files with [Claude.ai](https://www.anthropic.com/claude) projects.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![PyPI](https://badge.fury.io/py/claudesync.svg)](https://pypi.org/project/claudesync/)
+[![Release](https://img.shields.io/github/release/jahwag/claudesync.svg)](https://github.com/jahwag/claudesync/releases)
+[![Build Status](https://github.com/jahwag/ClaudeSync/actions/workflows/python-package.yml/badge.svg)](https://github.com/jahwag/ClaudeSync/actions/workflows/python-package.yml)
+[![Issues](https://img.shields.io/github/issues/jahwag/claudesync)](https://github.com/jahwag/claudesync/issues)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Dependencies](https://img.shields.io/librariesio/github/jahwag/claudesync)](https://github.com/jahwag/claudesync/network/dependencies)
+[![Last Commit](https://img.shields.io/github/last-commit/jahwag/claudesync.svg)](https://github.com/jahwag/claudesync/commits/main)
+[![Sponsor jahwag](https://img.shields.io/badge/Sponsor-♥-red)](https://github.com/sponsors/jahwag)
 
-## Overview and Scope
 
-ClaudeSync bridges the gap between your local development environment and Claude.ai's knowledge base. At a high level, the scope of ClaudeSync includes:
+ClaudeSync bridges your local development environment with Claude.ai projects, enabling seamless synchronization to enhance your AI-powered workflow.
 
-- Real-time synchronization with Claude.ai projects
-- Command-line interface (CLI) for easy management
-- Multiple organization and project support
-- Automatic handling of file creation, modification, and deletion
-- Intelligent file filtering based on .gitignore rules
-- Configurable sync interval with cron job support
-- Seamless integration with your existing workflow
-- Optional two-way synchronization support
-- Configuration management through CLI
-- Chat and artifact synchronization and management
+![ClaudeSync in Action](claudesync.gif)
 
-**Important Note**: ClaudeSync requires a Claude.ai Professional plan to function properly. Make sure you have an active Professional subscription before using this tool.
+## ⚠️ Disclaimer
 
-## Important Disclaimers
+ClaudeSync is an independent, open-source project **not affiliated** with Anthropic or Claude.ai. By using ClaudeSync, you agree to:
 
-- **Data Privacy**: ClaudeSync does not share any personal data or project data with anyone other than Anthropic (through Claude.ai) and yourself. Your data remains private and secure.
-- **Open Source Transparency**: We are committed to transparency. Our entire codebase is open source, allowing you to review and verify our practices.
-- **Affiliation**: ClaudeSync is not affiliated with, endorsed by, or sponsored by Anthropic. It is an independent tool created by enthusiasts for enthusiasts of Claude.ai.
-- **Use at Your Own Risk**: While we strive for reliability, please use ClaudeSync at your own discretion and risk. Always maintain backups of your important data.
+1. Use it at your own risk.
+2. Acknowledge potential violation of Anthropic's Terms of Service.
+3. Assume responsibility for any consequences.
+4. Understand that Anthropic does not support this tool.
 
-## Quick Start
+Please review [Anthropic's Terms of Service](https://www.anthropic.com/legal/consumer-terms) before using ClaudeSync.
 
-1. **Install ClaudeSync:**
-   ```bash
-   pip install claudesync
-   ```
+## 🌟 Features
 
-2. **Login to Claude.ai:**
-   ```bash
-   claudesync api login claude.ai
-   ```
+- **File sync**: Synchronize local files with [Claude.ai projects](https://www.anthropic.com/news/projects).
+- **Cross-Platform**: Compatible with [Windows, macOS, and Linux](https://github.com/jahwag/ClaudeSync/releases).
+- **Configurable**: Plenty of [configuration options](https://github.com/jahwag/ClaudeSync/wiki/Quick-reference).
+- **Integrate**: Designed to be easy to integrate into your pipelines.
+- **Secure**: Ensures data privacy and security.
 
-3. **Select an organization:**
-   ```bash
-   claudesync organization select
-   ```
+## ⚙️ Prerequisites
 
-4. **Select or create a project:**
-   ```bash
-   claudesync project select
-   # or
-   claudesync project create
-   ```
+### 📄 Supported Claude.ai plans
 
-5. **Start syncing:**
-   ```bash
-   claudesync sync
-   ```
+| [Plan](https://www.anthropic.com/pricing)   | Supported |
+|--------|-----------|
+| Pro    | ✅        |
+| Team   | ✅        |
+| Free   | ❌        |
 
-## Advanced Usage
+### 🔑 SSH Key
 
-### API Management
-- Login to Claude.ai: `claudesync api login claude.ai`
-- Logout: `claudesync api logout`
-- Set upload delay: `claudesync api ratelimit --delay <seconds>`
-- Set maximum file size: `claudesync api max-filesize --size <bytes>`
+Ensure you have an SSH key for secure credential storage. Follow [GitHub's guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) to generate and add your SSH key.
 
-### Organization Management
-- List organizations: `claudesync organization ls`
-- Select active organization: `claudesync organization select`
+### 💻 Software
 
-### Project Management
-- List projects: `claudesync project ls`
-- Create a new project: `claudesync project create`
-- Archive a project: `claudesync project archive`
-- Select active project: `claudesync project select`
-- Sync projects: `claudesync project sync`
+- **Python**: ≥ [3.10](https://www.python.org/downloads/)
+- **pip**: [Python package installer](https://pip.pypa.io/en/stable/installation/)
 
-### File Management
-- List remote files: `claudesync ls`
-- Sync files: `claudesync sync`
+## 🚀 Quick Start
 
-### Chat Management
-- List chats: `claudesync chat ls`
-- Sync chats and artifacts: `claudesync chat sync`
-- Delete chats: `claudesync chat rm`
-- Delete all chats: `claudesync chat rm -a`
+1. **Install ClaudeSync**
+    ```shell
+    pip install claudesync
+    ```
 
-### Configuration
-- View current status: `claudesync status`
-- Set configuration values: `claudesync config set <key> <value>`
-- Get configuration values: `claudesync config get <key>`
-- List all configuration values: `claudesync config ls`
+2. **Authenticate**
+    ```shell
+    claudesync auth login
+    ```
 
-### Synchronization Modes
+3. **Create a Project**
+    ```shell
+    claudesync project create
+    ```
 
-#### One-Way Sync (Default)
-By default, ClaudeSync operates in one-way sync mode, pushing changes from your local environment to Claude.ai. This ensures that your local files are the source of truth and prevents unexpected modifications to your local files.
+4. **Start Syncing***
+    ```shell
+    claudesync push
+    ```
+    **This is a one-way sync. Files not present locally will be removed from the Claude.ai project unless pruning is [disabled](https://github.com/jahwag/ClaudeSync/wiki/Quick-reference#pruning-remote).*
 
-**Warning:** During synchronization, any files present on the remote server that are not available in your local environment will be automatically deleted from the remote server. Ensure that all important files are present locally before syncing to avoid unintentional data loss.
+📚 [Detailed Guides & FAQs](https://github.com/jahwag/claudesync/wiki)
 
-#### Two-Way Sync (Experimental)
-Two-way synchronization is available as an experimental feature. This mode allows changes made on the remote Claude.ai project to be reflected in your local files. However, please be aware of the following:
+## 🤝 Support & Contribute
 
-1. To enable two-way synchronization:
-   ```bash
-   claudesync config set two_way_sync true
-   ```
+Enjoying ClaudeSync? Support us by:
 
-2. **Caution**: Claude.ai has a tendency to modify filenames, often appending descriptive text. For example, "README.md" might become "Updated README.md with config and two-way sync info.md". This behavior is currently beyond ClaudeSync's control.
+- ⭐ [Starring the Repository](https://github.com/jahwag/claudesync)
+- 🐛 [Reporting Issues](https://github.com/jahwag/claudesync/issues)
+- 🌍 [Contributing](CONTRIBUTING.md)
+- 💬 [Join Our Discord](https://discord.gg/pR4qeMH4u4)
+- 💖 [Sponsor Us](https://github.com/sponsors/jahwag)
 
-3. **Potential Data Loss**: Due to the filename modification issue, there's a risk of unintended file duplication or data loss. Always maintain backups of your important files when using two-way sync.
-
-4. **Future Improvements**: We're actively exploring ways to mitigate these issues, possibly through prompt engineering or updates to ClaudeSync. For now, this feature is provided as-is and should be used with understanding of its limitations.
-
-### Scheduled Sync
-Set up automatic syncing at regular intervals:
-```bash
-claudesync schedule
-```
-
-### Providers
-
-ClaudeSync offers two providers for interacting with the Claude.ai API:
-
-1. **claude.ai (Default)**:
-   - Uses built-in Python libraries to make API requests.
-   - No additional dependencies required.
-   - Recommended for most users.
-
-2. **claude.ai-curl**:
-   - Uses cURL to make API requests.
-   - Requires cURL to be installed on your system.
-   - Can be used as a workaround for certain issues, such as 403 Forbidden errors.
-
-   **Note for Windows Users**: To use the claude.ai-curl provider on Windows, you need to have cURL installed. This can be done by:
-   - Installing [Git for Windows](https://git-scm.com/download/win) (which includes cURL)
-   - Installing [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install)
-
-   Make sure cURL is accessible from your command line before using this provider.
-
-### Custom Ignore File
-
-ClaudeSync supports a custom ignore file named .claudeignore for specifying patterns of files to exclude from syncing, using the same syntax as .gitignore.
-
-### Troubleshooting
-
-#### 403 Forbidden Error
-If you encounter a 403 Forbidden error when using ClaudeSync, it might be due to an issue with the session key or API access. Here are some steps to resolve this:
-
-1. Ensure you have an active Claude.ai Professional plan subscription.
-2. Try logging out and logging in again:
-   ```bash
-   claudesync api logout
-   claudesync api login claude.ai
-   ```
-3. If the issue persists, you can try using the claude.ai-curl provider as a workaround:
-   ```bash
-   claudesync api logout
-   claudesync api login claude.ai-curl
-   ```
-
-#### WinError 206 when syncing large files
-If you encounter WinError 206 when syncing files larger than 32 KB, you can try using file input for curl data:
-
-```bash
-claudesync config set curl_use_file_input True
-```
-
-If you continue to experience issues, please check your network connection and ensure that you have the necessary permissions to access Claude.ai.
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more information.
-
-## Communication Channels
-
-- **Issues**: For bug reports and feature requests, please use our [GitHub Issues](https://github.com/jahwag/claudesync/issues).
-- **Discord**: For general development discussions, visit our [Discord server](https://discord.gg/pR4qeMH4u4).
-
-## License
-
-ClaudeSync is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Related Projects
-
-- [Claude.ai](https://www.anthropic.com/claude): The AI assistant that ClaudeSync integrates with.
+Your contributions help improve ClaudeSync!
 
 ---
 
-Made with ❤️ by the ClaudeSync team
+[Contributors](https://github.com/jahwag/claudesync/graphs/contributors) • [License](https://github.com/jahwag/claudesync/blob/master/LICENSE) • [Report Bug](https://github.com/jahwag/claudesync/issues) • [Request Feature](https://github.com/jahwag/claudesync/issues/new?labels=enhancement&template=feature_request.md)• [Sponsor](https://github.com/sponsors/jahwag)
